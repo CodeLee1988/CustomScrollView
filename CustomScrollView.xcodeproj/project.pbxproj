@@ -21,6 +21,7 @@
 		5D3A785118FF1912006CCAB3 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 5D3A784F18FF1912006CCAB3 /* InfoPlist.strings */; };
 		5D3A785318FF1912006CCAB3 /* CustomScrollViewTests.m in Sources */ = {isa = PBXBuildFile; fileRef = 5D3A785218FF1912006CCAB3 /* CustomScrollViewTests.m */; };
 		5D3A785E18FF1923006CCAB3 /* CustomScrollView.m in Sources */ = {isa = PBXBuildFile; fileRef = 5D3A785D18FF1923006CCAB3 /* CustomScrollView.m */; };
+		A6DF62EA1965A244008F895E /* CSCDynamicItem.m in Sources */ = {isa = PBXBuildFile; fileRef = A6DF62E91965A244008F895E /* CSCDynamicItem.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -54,6 +55,8 @@
 		5D3A785218FF1912006CCAB3 /* CustomScrollViewTests.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = CustomScrollViewTests.m; sourceTree = "<group>"; };
 		5D3A785C18FF1923006CCAB3 /* CustomScrollView.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CustomScrollView.h; sourceTree = "<group>"; };
 		5D3A785D18FF1923006CCAB3 /* CustomScrollView.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CustomScrollView.m; sourceTree = "<group>"; };
+		A6DF62E81965A244008F895E /* CSCDynamicItem.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = CSCDynamicItem.h; sourceTree = "<group>"; };
+		A6DF62E91965A244008F895E /* CSCDynamicItem.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = CSCDynamicItem.m; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -115,12 +118,14 @@
 			children = (
 				5D3A783618FF1912006CCAB3 /* AppDelegate.h */,
 				5D3A783718FF1912006CCAB3 /* AppDelegate.m */,
-				5D3A783C18FF1912006CCAB3 /* ViewController.h */,
-				5D3A783D18FF1912006CCAB3 /* ViewController.m */,
+				A6DF62E81965A244008F895E /* CSCDynamicItem.h */,
+				A6DF62E91965A244008F895E /* CSCDynamicItem.m */,
 				5D3A785C18FF1923006CCAB3 /* CustomScrollView.h */,
 				5D3A785D18FF1923006CCAB3 /* CustomScrollView.m */,
 				5D3A783F18FF1912006CCAB3 /* Images.xcassets */,
 				5D3A782E18FF1912006CCAB3 /* Supporting Files */,
+				5D3A783C18FF1912006CCAB3 /* ViewController.h */,
+				5D3A783D18FF1912006CCAB3 /* ViewController.m */,
 			);
 			path = CustomScrollView;
 			sourceTree = "<group>";
@@ -254,6 +259,7 @@
 				5D3A783818FF1912006CCAB3 /* AppDelegate.m in Sources */,
 				5D3A785E18FF1923006CCAB3 /* CustomScrollView.m in Sources */,
 				5D3A783418FF1912006CCAB3 /* main.m in Sources */,
+				A6DF62EA1965A244008F895E /* CSCDynamicItem.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
