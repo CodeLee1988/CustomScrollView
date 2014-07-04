@@ -9,6 +9,14 @@
 #import "CustomScrollView.h"
 #import "CSCDynamicItem.h"
 
+static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
+
+    const CGFloat constant = 0.55f;
+    CGFloat result = (constant * abs(offset) * dimension) / (dimension + constant * abs(offset));
+    // The algorithm expects a positive offset, so we have to negate the result if the offset was negative.
+    return offset < 0.0f ? -result : result;
+}
+
 @interface CustomScrollView ()
 @property CGRect startBounds;
 @property (nonatomic, strong) UIDynamicAnimator *animator;
@@ -74,12 +82,16 @@
             CGFloat newBoundsOriginX = bounds.origin.x - translation.x;
             CGFloat minBoundsOriginX = 0.0;
             CGFloat maxBoundsOriginX = self.contentSize.width - bounds.size.width;
-            bounds.origin.x = fmax(minBoundsOriginX, fmin(newBoundsOriginX, maxBoundsOriginX));
+            CGFloat constrainedBoundsOriginX = fmax(minBoundsOriginX, fmin(newBoundsOriginX, maxBoundsOriginX));
+            CGFloat rubberBandedX = rubberBandDistance(newBoundsOriginX - constrainedBoundsOriginX, CGRectGetWidth(self.bounds));
+            bounds.origin.x = constrainedBoundsOriginX + rubberBandedX;
 
             CGFloat newBoundsOriginY = bounds.origin.y - translation.y;
             CGFloat minBoundsOriginY = 0.0;
             CGFloat maxBoundsOriginY = self.contentSize.height - bounds.size.height;
-            bounds.origin.y = fmax(minBoundsOriginY, fmin(newBoundsOriginY, maxBoundsOriginY));
+            CGFloat constrainedBoundsOriginY = fmax(minBoundsOriginY, fmin(newBoundsOriginY, maxBoundsOriginY));
+            CGFloat rubberBandedY = rubberBandDistance(newBoundsOriginY - constrainedBoundsOriginY, CGRectGetHeight(self.bounds));
+            bounds.origin.y = constrainedBoundsOriginY + rubberBandedY;
 
             self.bounds = bounds;
         }
