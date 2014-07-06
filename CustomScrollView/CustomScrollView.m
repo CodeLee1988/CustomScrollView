@@ -101,21 +101,13 @@ static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
         case UIGestureRecognizerStateEnded:
         {
             CGPoint velocity = [panGestureRecognizer velocityInView:self];
-            if (![self scrollHorizontal]) {
-                velocity.x = 0;
-            }
-            if (![self scrollVertical]) {
-                velocity.y = 0;
-            }
             velocity.x = -velocity.x;
             velocity.y = -velocity.y;
 
-            CGPoint maxBoundsOrigin = CGPointMake(self.contentSize.width - self.bounds.size.width,
-                                                  self.contentSize.height - self.bounds.size.height);
-            BOOL outsideBoundsMinimum = self.bounds.origin.x < 0.0 || self.bounds.origin.y < 0.0;
-            BOOL outsideBoundsMaximum = self.bounds.origin.x > maxBoundsOrigin.x || self.bounds.origin.y > maxBoundsOrigin.y;
-            if (outsideBoundsMinimum || outsideBoundsMaximum) {
+            if (![self scrollHorizontal] || [self outsideBoundsMinimum] || [self outsideBoundsMaximum]) {
                 velocity.x = 0;
+            }
+            if (![self scrollVertical] || [self outsideBoundsMinimum] || [self outsideBoundsMaximum]) {
                 velocity.y = 0;
             }
 
@@ -146,15 +138,10 @@ static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
 {
     [super setBounds:bounds];
 
-    CGPoint maxBoundsOrigin = CGPointMake(self.contentSize.width - bounds.size.width,
-                                    self.contentSize.height - bounds.size.height);
-    BOOL outsideBoundsMinimum = bounds.origin.x < 0.0 || bounds.origin.y < 0.0;
-    BOOL outsideBoundsMaximum = bounds.origin.x > maxBoundsOrigin.x || bounds.origin.y > maxBoundsOrigin.y;
-
-    if ((outsideBoundsMaximum || outsideBoundsMinimum) &&
+    if (([self outsideBoundsMinimum] || [self outsideBoundsMaximum]) &&
         (self.decelerationBehavior && !self.springBehavior)) {
 
-        CGPoint target = [self anchorFromBounds:bounds maxBoundsOrigin:maxBoundsOrigin];
+        CGPoint target = [self anchor];
 
         UIAttachmentBehavior *springBehavior = [[UIAttachmentBehavior alloc] initWithItem:self.dynamicItem attachedToAnchor:target];
         // Has to be equal to zero, because otherwise the bounds.origin wouldn't exactly match the target's position.
@@ -167,7 +154,7 @@ static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
         self.springBehavior = springBehavior;
     }
 
-    if (!outsideBoundsMaximum && !outsideBoundsMinimum) {
+    if (![self outsideBoundsMinimum] && ![self outsideBoundsMaximum]) {
         self.lastPointInBounds = bounds.origin;
     }
 }
@@ -182,9 +169,28 @@ static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
     return self.contentSize.width > CGRectGetWidth(self.bounds);
 }
 
-- (CGPoint)anchorFromBounds:(CGRect)bounds maxBoundsOrigin:(CGPoint)maxBoundsOrigin
+- (CGPoint)maxBoundsOrigin
 {
+    return CGPointMake(self.contentSize.width - self.bounds.size.width,
+                       self.contentSize.height - self.bounds.size.height);
+}
+
+- (BOOL)outsideBoundsMinimum
+{
+    return self.bounds.origin.x < 0.0 || self.bounds.origin.y < 0.0;
+}
+
+- (BOOL)outsideBoundsMaximum
+{
+    CGPoint maxBoundsOrigin = [self maxBoundsOrigin];
+    return self.bounds.origin.x > maxBoundsOrigin.x || self.bounds.origin.y > maxBoundsOrigin.y;
+}
+
+- (CGPoint)anchor
+{
+    CGRect bounds = self.bounds;
     CGPoint target = bounds.origin;
+    CGPoint maxBoundsOrigin = [self maxBoundsOrigin];
 
     CGFloat deltaX = self.lastPointInBounds.x - bounds.origin.x;
     CGFloat deltaY = self.lastPointInBounds.y - bounds.origin.y;
