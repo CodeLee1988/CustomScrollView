@@ -21,6 +21,7 @@ static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
 @property CGRect startBounds;
 @property (nonatomic, strong) UIDynamicAnimator *animator;
 @property (nonatomic, weak) UIDynamicItemBehavior *decelerationBehavior;
+@property (nonatomic, weak) UIAttachmentBehavior *springBehavior;
 @property (nonatomic, strong) CSCDynamicItem *dynamicItem;
 @end
 
@@ -128,6 +129,40 @@ static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
 
         default:
             break;
+    }
+}
+
+- (void)setBounds:(CGRect)bounds
+{
+    [super setBounds:bounds];
+
+    CGPoint maxBoundsOrigin = CGPointMake(self.contentSize.width - bounds.size.width,
+                                    self.contentSize.height - bounds.size.height);
+    BOOL outsideBoundsMinimum = bounds.origin.x < 0.0 || bounds.origin.y < 0.0;
+    BOOL outsideBoundsMaximum = bounds.origin.x > maxBoundsOrigin.x || bounds.origin.y > maxBoundsOrigin.y;
+
+    if ((outsideBoundsMaximum || outsideBoundsMinimum) &&
+        (self.decelerationBehavior && !self.springBehavior)) {
+
+        CGPoint target = bounds.origin;
+        if (outsideBoundsMinimum) {
+            target.x = fmin(maxBoundsOrigin.x, fmax(target.x, 0.0));
+            target.y = fmin(maxBoundsOrigin.y, fmax(target.y, 0.0));
+        } else if (outsideBoundsMaximum) {
+            // `fmax` is used to fix the case when contentSize is smaller than bounds
+            target.x = fmax(0, fmin(target.x, maxBoundsOrigin.x));
+            target.y = fmax(0, fmin(target.y, maxBoundsOrigin.y));
+        }
+
+        UIAttachmentBehavior *springBehavior = [[UIAttachmentBehavior alloc] initWithItem:self.dynamicItem attachedToAnchor:target];
+        // Has to be equal to zero, because otherwise the bounds.origin wouldn't exactly match the target's position.
+        springBehavior.length = 0;
+        // These two values were chosen by trial and error.
+        springBehavior.damping = 1;
+        springBehavior.frequency = 2;
+
+        [self.animator addBehavior:springBehavior];
+        self.springBehavior = springBehavior;
     }
 }
 
