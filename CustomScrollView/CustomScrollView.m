@@ -163,17 +163,6 @@ static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
 
         [self.animator addBehavior:springBehavior];
         self.springBehavior = springBehavior;
-
-
-        UICollisionBehavior *collisionBehavior = [[UICollisionBehavior alloc] initWithItems:@[self.dynamicItem]];
-
-        CGRect pathRect = CGRectMake(0,
-                                     0,
-                                     maxBoundsOrigin.x,
-                                     maxBoundsOrigin.y);
-        UIBezierPath *collisionPath = [UIBezierPath bezierPathWithRect:pathRect];
-        [collisionBehavior addBoundaryWithIdentifier:@"boundary" forPath:collisionPath];
-        [self.animator addBehavior:collisionBehavior];
     }
 }
 
