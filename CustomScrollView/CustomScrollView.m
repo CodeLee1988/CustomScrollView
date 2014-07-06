@@ -23,6 +23,7 @@ static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
 @property (nonatomic, weak) UIDynamicItemBehavior *decelerationBehavior;
 @property (nonatomic, weak) UIAttachmentBehavior *springBehavior;
 @property (nonatomic, strong) CSCDynamicItem *dynamicItem;
+@property (nonatomic) CGPoint lastPointInBounds;
 @end
 
 @implementation CustomScrollView
@@ -109,6 +110,15 @@ static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
             velocity.x = -velocity.x;
             velocity.y = -velocity.y;
 
+            CGPoint maxBoundsOrigin = CGPointMake(self.contentSize.width - self.bounds.size.width,
+                                                  self.contentSize.height - self.bounds.size.height);
+            BOOL outsideBoundsMinimum = self.bounds.origin.x < 0.0 || self.bounds.origin.y < 0.0;
+            BOOL outsideBoundsMaximum = self.bounds.origin.x > maxBoundsOrigin.x || self.bounds.origin.y > maxBoundsOrigin.y;
+            if (outsideBoundsMinimum || outsideBoundsMaximum) {
+                velocity.x = 0;
+                velocity.y = 0;
+            }
+
             self.dynamicItem.center = self.bounds.origin;
             UIDynamicItemBehavior *decelerationBehavior = [[UIDynamicItemBehavior alloc] initWithItems:@[self.dynamicItem]];
             [decelerationBehavior addLinearVelocity:velocity forItem:self.dynamicItem];
@@ -144,15 +154,7 @@ static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
     if ((outsideBoundsMaximum || outsideBoundsMinimum) &&
         (self.decelerationBehavior && !self.springBehavior)) {
 
-        CGPoint target = bounds.origin;
-        if (outsideBoundsMinimum) {
-            target.x = fmin(maxBoundsOrigin.x, fmax(target.x, 0.0));
-            target.y = fmin(maxBoundsOrigin.y, fmax(target.y, 0.0));
-        } else if (outsideBoundsMaximum) {
-            // `fmax` is used to fix the case when contentSize is smaller than bounds
-            target.x = fmax(0, fmin(target.x, maxBoundsOrigin.x));
-            target.y = fmax(0, fmin(target.y, maxBoundsOrigin.y));
-        }
+        CGPoint target = [self anchorFromBounds:bounds maxBoundsOrigin:maxBoundsOrigin];
 
         UIAttachmentBehavior *springBehavior = [[UIAttachmentBehavior alloc] initWithItem:self.dynamicItem attachedToAnchor:target];
         // Has to be equal to zero, because otherwise the bounds.origin wouldn't exactly match the target's position.
@@ -164,6 +166,10 @@ static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
         [self.animator addBehavior:springBehavior];
         self.springBehavior = springBehavior;
     }
+
+    if (!outsideBoundsMaximum && !outsideBoundsMinimum) {
+        self.lastPointInBounds = bounds.origin;
+    }
 }
 
 - (BOOL)scrollVertical
@@ -174,6 +180,48 @@ static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
 - (BOOL)scrollHorizontal
 {
     return self.contentSize.width > CGRectGetWidth(self.bounds);
+}
+
+- (CGPoint)anchorFromBounds:(CGRect)bounds maxBoundsOrigin:(CGPoint)maxBoundsOrigin
+{
+    CGPoint target = bounds.origin;
+
+    CGFloat deltaX = self.lastPointInBounds.x - bounds.origin.x;
+    CGFloat deltaY = self.lastPointInBounds.y - bounds.origin.y;
+
+    // solves a system of equations: y_1 = ax_1 + b and y_2 = ax_2 + b
+    CGFloat a = deltaY / deltaX;
+    CGFloat b = self.lastPointInBounds.y - self.lastPointInBounds.x * a;
+
+    CGFloat leftBending = -bounds.origin.x;
+    CGFloat topBending = -bounds.origin.y;
+    CGFloat rightBending = bounds.origin.x - maxBoundsOrigin.x;
+    CGFloat bottomBending = bounds.origin.y - maxBoundsOrigin.y;
+
+    if (bounds.origin.x < 0.0 && leftBending > topBending && leftBending > bottomBending) {
+        target.x = 0;
+        // Updates y only if there was a vertical movement.
+        if (deltaY != 0) {
+            target.y = a * target.x + b;
+        }
+    } else if (bounds.origin.y < 0.0 && topBending > leftBending && topBending > rightBending) {
+        target.y = 0;
+        if (deltaX != 0) {
+            target.x = (target.y - b) / a;
+        }
+    } else if (bounds.origin.x > maxBoundsOrigin.x && rightBending > topBending && rightBending > bottomBending) {
+        target.x = maxBoundsOrigin.x;
+        if (deltaY != 0) {
+            target.y = a * target.x + b;
+        }
+    } else if (bounds.origin.y > maxBoundsOrigin.y) {
+        target.y = maxBoundsOrigin.y;
+        if (deltaX != 0) {
+            target.x = (target.y - b) / a;
+        }
+    }
+
+    return target;
 }
 
 @end
