@@ -189,7 +189,6 @@ static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
 - (CGPoint)anchor
 {
     CGRect bounds = self.bounds;
-    CGPoint target = bounds.origin;
     CGPoint maxBoundsOrigin = [self maxBoundsOrigin];
 
     CGFloat deltaX = self.lastPointInBounds.x - bounds.origin.x;
@@ -204,30 +203,37 @@ static CGFloat rubberBandDistance(CGFloat offset, CGFloat dimension) {
     CGFloat rightBending = bounds.origin.x - maxBoundsOrigin.x;
     CGFloat bottomBending = bounds.origin.y - maxBoundsOrigin.y;
 
+    // Updates anchor's `y` based on already set `x`, i.e. y = f(x)
+    void(^solveForY)(CGPoint*) = ^(CGPoint *anchor) {
+        // Updates `y` only if there was a vertical movement. Otherwise `y` based on current `bounds.origin` is already correct.
+        if (deltaY != 0) {
+            anchor->y = a * anchor->x + b;
+        }
+    };
+    // Updates anchor's `x` based on already set `y`, i.e. x =  f^(-1)(y)
+    void(^solveForX)(CGPoint*) = ^(CGPoint *anchor) {
+        if (deltaX != 0) {
+            anchor->x = (anchor->y - b) / a;
+        }
+    };
+
+    CGPoint anchor = bounds.origin;
+
     if (bounds.origin.x < 0.0 && leftBending > topBending && leftBending > bottomBending) {
-        target.x = 0;
-        // Updates y only if there was a vertical movement.
-        if (deltaY != 0) {
-            target.y = a * target.x + b;
-        }
+        anchor.x = 0;
+        solveForY(&anchor);
     } else if (bounds.origin.y < 0.0 && topBending > leftBending && topBending > rightBending) {
-        target.y = 0;
-        if (deltaX != 0) {
-            target.x = (target.y - b) / a;
-        }
+        anchor.y = 0;
+        solveForX(&anchor);
     } else if (bounds.origin.x > maxBoundsOrigin.x && rightBending > topBending && rightBending > bottomBending) {
-        target.x = maxBoundsOrigin.x;
-        if (deltaY != 0) {
-            target.y = a * target.x + b;
-        }
+        anchor.x = maxBoundsOrigin.x;
+        solveForY(&anchor);
     } else if (bounds.origin.y > maxBoundsOrigin.y) {
-        target.y = maxBoundsOrigin.y;
-        if (deltaX != 0) {
-            target.x = (target.y - b) / a;
-        }
+        anchor.y = maxBoundsOrigin.y;
+        solveForX(&anchor);
     }
 
-    return target;
+    return anchor;
 }
 
 @end
